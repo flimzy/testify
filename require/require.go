@@ -38,3 +38,21 @@ func DeepEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface
 func (a *Assertions) DeepEqual(expected, actual interface{}, msgAndArgs ...interface{}) {
 	DeepEqual(a.t, expected, actual, msgAndArgs...)
 }
+
+// DeepEqualJSON marshals the expected and actual interfaces to JSON, then
+// unmarshals before doing a reflect.DeepEqual check on them. If they are
+// unequal, a diff of their respective JSON representations is produced as
+// output.
+func DeepEqualJSON(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
+	if !assert.DeepEqualJSON(t, expected, actual, msgAndArgs...) {
+		t.FailNow()
+	}
+}
+
+// DeepEqualJSON marshals the expected and actual interfaces to JSON, then
+// unmarshals before doing a reflect.DeepEqual check on them. If they are
+// unequal, a diff of their respective JSON representations is produced as
+// output.
+func (a *Assertions) DeepEqualJSON(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
+	DeepEqualJSON(a.t, expected, actual, msgAndArgs...)
+}

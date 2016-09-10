@@ -1,6 +1,7 @@
 package assert
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -65,19 +66,6 @@ func Fail(t TestingT, failureMessage string, msgAndArgs ...interface{}) bool {
 	return assert.Fail(t, failureMessage, msgAndArgs...)
 }
 
-// DeepEqual asserts that two objects are deeply equal.
-func DeepEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool {
-	if reflect.DeepEqual(expected, actual) {
-		return true
-	}
-	return FailDiff(t, "Structs differ", interfaceDiff(expected, actual), msgAndArgs...)
-}
-
-// DeepEqual asserts that two objects are deeply equal.
-func (a *Assertions) DeepEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool {
-	return DeepEqual(a.t, expected, actual, msgAndArgs...)
-}
-
 var capRE = regexp.MustCompile("cap=[0-9]+\\)")
 var capRepl = "cap=X"
 var addRE = regexp.MustCompile("\\(0x[0-9a-f]{6,10}\\)")
@@ -113,4 +101,49 @@ func interfaceDiff(expected, actual interface{}) string {
 	actString = addRE.ReplaceAllString(actString, addRepl)
 
 	return diff(expString, actString)
+}
+
+// DeepEqual asserts that two objects are deeply equal.
+func DeepEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool {
+	if reflect.DeepEqual(expected, actual) {
+		return true
+	}
+	return FailDiff(t, "Structs differ", interfaceDiff(expected, actual), msgAndArgs...)
+}
+
+// DeepEqual asserts that two objects are deeply equal.
+func (a *Assertions) DeepEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool {
+	return DeepEqual(a.t, expected, actual, msgAndArgs...)
+}
+
+// DeepEqualJSON marshals the expected and actual interfaces to JSON, then
+// unmarshals before doing a reflect.DeepEqual check on them. If they are
+// unequal, a diff of their respective JSON representations is produced as
+// output.
+func DeepEqualJSON(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool {
+	expectedJSON := marshalJSON(t, expected, msgAndArgs...)
+	actualJSON := marshalJSON(t, actual, msgAndArgs...)
+	var e, a interface{}
+	json.Unmarshal(expectedJSON, &e)
+	json.Unmarshal(actualJSON, &a)
+	if reflect.DeepEqual(e, a) {
+		return true
+	}
+	return FailDiff(t, "JSON representations differ", diff(string(expectedJSON), string(actualJSON)), msgAndArgs...)
+}
+
+// DeepEqualJSON marshals the expected and actual interfaces to JSON, then
+// unmarshals before doing a reflect.DeepEqual check on them. If they are
+// unequal, a diff of their respective JSON representations is produced as
+// output.
+func (a *Assertions) DeepEqualJSON(expected, actual interface{}, msgAndArgs ...interface{}) bool {
+	return DeepEqualJSON(a.t, expected, actual, msgAndArgs...)
+}
+
+func marshalJSON(t TestingT, i interface{}, msgAndArgs ...interface{}) []byte {
+	output, err := json.MarshalIndent(i, "", "    ")
+	if err != nil {
+		Fail(t, fmt.Sprintf("Error marshaling JSON: %s\n", err), msgAndArgs...)
+	}
+	return output
 }
