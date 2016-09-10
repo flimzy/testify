@@ -147,3 +147,24 @@ func marshalJSON(t TestingT, i interface{}, msgAndArgs ...interface{}) []byte {
 	}
 	return output
 }
+
+// MarshalsToJSON asserts that the actual interface{} marshals to the expected
+// JSON.
+func MarshalsToJSON(t TestingT, expected []byte, actual interface{}, msgAndArgs ...interface{}) bool {
+	actualJSON := marshalJSON(t, actual, msgAndArgs...)
+	var e, a interface{}
+	if err := json.Unmarshal(expected, &e); err != nil {
+		return Fail(t, "Error unmarshaling expected JSON string", msgAndArgs...)
+	}
+	json.Unmarshal(actualJSON, &a)
+	if reflect.DeepEqual(e, a) {
+		return true
+	}
+	return FailDiff(t, "JSON representations differ", diff(string(expected), string(actualJSON)), msgAndArgs...)
+}
+
+// MarshalsToJSON asserts that the actual interface{} marshals to the expected
+// JSON.
+func (a *Assertions) MarshalsToJSON(expected []byte, actual interface{}, msgAndArgs ...interface{}) bool {
+	return MarshalsToJSON(a.t, expected, actual, msgAndArgs...)
+}

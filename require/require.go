@@ -56,3 +56,17 @@ func DeepEqualJSON(t TestingT, expected, actual interface{}, msgAndArgs ...inter
 func (a *Assertions) DeepEqualJSON(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
 	DeepEqualJSON(a.t, expected, actual, msgAndArgs...)
 }
+
+// MarshalsToJSON asserts that the actual interface{} marshals to the expected
+// JSON.
+func MarshalsToJSON(t TestingT, expected []byte, actual interface{}, msgAndArgs ...interface{}) {
+	if !assert.MarshalsToJSON(t, expected, actual, msgAndArgs...) {
+		t.FailNow()
+	}
+}
+
+// MarshalsToJSON asserts that the actual interface{} marshals to the expected
+// JSON.
+func (a *Assertions) MarshalsToJSON(expected []byte, actual interface{}, msgAndArgs ...interface{}) {
+	MarshalsToJSON(a.t, expected, actual, msgAndArgs...)
+}
