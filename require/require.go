@@ -53,7 +53,7 @@ func DeepEqualJSON(t TestingT, expected, actual interface{}, msgAndArgs ...inter
 // unmarshals before doing a reflect.DeepEqual check on them. If they are
 // unequal, a diff of their respective JSON representations is produced as
 // output.
-func (a *Assertions) DeepEqualJSON(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
+func (a *Assertions) DeepEqualJSON(expected, actual interface{}, msgAndArgs ...interface{}) {
 	DeepEqualJSON(a.t, expected, actual, msgAndArgs...)
 }
 
@@ -69,4 +69,18 @@ func MarshalsToJSON(t TestingT, expected []byte, actual interface{}, msgAndArgs 
 // JSON.
 func (a *Assertions) MarshalsToJSON(expected []byte, actual interface{}, msgAndArgs ...interface{}) {
 	MarshalsToJSON(a.t, expected, actual, msgAndArgs...)
+}
+
+// LinesEqual asserts that the two strings are equal, or shows a line-by-line
+// diff of their differences.
+func LinesEqual(t TestingT, expected, actual string, msgAndArgs ...interface{}) {
+	if !assert.LinesEqual(t, expected, actual, msgAndArgs...) {
+		t.FailNow()
+	}
+}
+
+// LinesEqual asserts that the two strings are equal, or shows a line-by-line
+// diff of their differences.
+func (a *Assertions) LinesEqual(expected, actual string, msgAndArgs ...interface{}) {
+	LinesEqual(a.t, expected, actual, msgAndArgs...)
 }

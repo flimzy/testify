@@ -168,3 +168,18 @@ func MarshalsToJSON(t TestingT, expected []byte, actual interface{}, msgAndArgs 
 func (a *Assertions) MarshalsToJSON(expected []byte, actual interface{}, msgAndArgs ...interface{}) bool {
 	return MarshalsToJSON(a.t, expected, actual, msgAndArgs...)
 }
+
+// LinesEqual asserts that the two strings are equal, or shows a line-by-line
+// diff of their differences.
+func LinesEqual(t TestingT, expected, actual string, msgAndArgs ...interface{}) bool {
+	if expected == actual {
+		return true
+	}
+	return FailDiff(t, "Strings differ", diff(expected, actual), msgAndArgs...)
+}
+
+// LinesEqual asserts that the two strings are equal, or shows a line-by-line
+// diff of their differences.
+func (a *Assertions) LinesEqual(expected, actual string, msgAndArgs ...interface{}) bool {
+	return LinesEqual(a.t, expected, actual, msgAndArgs...)
+}
