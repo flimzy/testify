@@ -112,7 +112,7 @@ func DeepEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface
 }
 
 // DeepEqual asserts that two objects are deeply equal.
-func (a *Assertions) DeepEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool {
+func (a *Assertions) DeepEqual(expected, actual interface{}, msgAndArgs ...interface{}) bool {
 	return DeepEqual(a.t, expected, actual, msgAndArgs...)
 }
 
