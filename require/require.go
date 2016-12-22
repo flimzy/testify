@@ -84,3 +84,17 @@ func LinesEqual(t TestingT, expected, actual string, msgAndArgs ...interface{}) 
 func (a *Assertions) LinesEqual(expected, actual string, msgAndArgs ...interface{}) {
 	LinesEqual(a.t, expected, actual, msgAndArgs...)
 }
+
+// HTMLEqual asserts that the two arguments represent equivalent HTML. Accepts
+// strings, byte arrays, *html.Node objects, or goquery selection.
+func HTMLEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
+	if !assert.HTMLEqual(t, expected, actual, msgAndArgs...) {
+		t.FailNow()
+	}
+}
+
+// HTMLEqual asserts that the two arguments represent equivalent HTML. Accepts
+// strings, byte arrays, *html.Node objects, or goquery selection.
+func (a *Assertions) HTMLEqual(expected, actual interface{}, msgAndArgs ...interface{}) {
+	HTMLEqual(a.t, expected, actual, msgAndArgs...)
+}

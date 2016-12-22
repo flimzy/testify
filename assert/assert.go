@@ -1,13 +1,18 @@
 package assert
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strings"
 
+	"golang.org/x/net/html"
+
+	"github.com/PuerkitoBio/goquery"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/pkg/errors"
 	"github.com/pmezard/go-difflib/difflib"
 	"github.com/stretchr/testify/assert"
 )
@@ -182,4 +187,48 @@ func LinesEqual(t TestingT, expected, actual string, msgAndArgs ...interface{}) 
 // diff of their differences.
 func (a *Assertions) LinesEqual(expected, actual string, msgAndArgs ...interface{}) bool {
 	return LinesEqual(a.t, expected, actual, msgAndArgs...)
+}
+
+// HTMLEqual asserts that the two arguments represent equivalent HTML. Accepts
+// strings, byte arrays, *html.Node objects, or goquery selection.
+func HTMLEqual(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) bool {
+	expDoc, err := toHTMLNode(expected)
+	if err != nil {
+		t.Errorf("invalid expected document: %s", err)
+		t.FailNow()
+	}
+	actDoc, err := toHTMLNode(actual)
+	if err != nil {
+		t.Errorf("invalid actual document: %s", err)
+		t.FailNow()
+	}
+	if !reflect.DeepEqual(expDoc, actDoc) {
+		expBuf := new(bytes.Buffer)
+		html.Render(expBuf, expDoc)
+		actBuf := new(bytes.Buffer)
+		html.Render(actBuf, actDoc)
+		return FailDiff(t, "HTML differs", diff(expBuf.String(), actBuf.String()), msgAndArgs...)
+	}
+	return true
+}
+
+func toHTMLNode(i interface{}) (*html.Node, error) {
+	switch i.(type) {
+	case *html.Node:
+		return i.(*html.Node), nil
+	case string:
+		r := strings.NewReader(i.(string))
+		return html.Parse(r)
+	case []byte:
+		r := bytes.NewReader(i.([]byte))
+		return html.Parse(r)
+	case *goquery.Selection:
+		str, err := goquery.OuterHtml(i.(*goquery.Selection))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get outer html")
+		}
+		r := strings.NewReader(str)
+		return html.Parse(r)
+	}
+	return nil, errors.Errorf("unknown type: %T", i)
 }
