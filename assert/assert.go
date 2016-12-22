@@ -77,6 +77,12 @@ var addRE = regexp.MustCompile("\\(0x[0-9a-f]{6,10}\\)")
 var addRepl = "(0xXXXXXXXXXX)"
 
 func diff(expected, actual string) string {
+	if !strings.HasSuffix(expected, "\n") {
+		expected = expected + "\n"
+	}
+	if !strings.HasSuffix(actual, "\n") {
+		actual = actual + "\n"
+	}
 	udiff := difflib.UnifiedDiff{
 		A:        strings.SplitAfter(expected, "\n"),
 		FromFile: "expected",
