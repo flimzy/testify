@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -44,20 +43,19 @@ func FailDiff(t TestingT, failureMessage, diff string, msgAndArgs ...interface{}
 	}
 	message := messageFromMsgAndArgs(msgAndArgs...)
 
-	errorTrace := strings.Join(assert.CallerInfo(), "\n\r\t\t\t")
-	msg := fmt.Sprintf("\r%s\r\tError Trace:\t%s\n"+
-		"\r\tError:%s\n",
+	errorTrace := strings.Join(assert.CallerInfo(), "\n\t\t\t")
+	msg := fmt.Sprintf("%s\n\tError Trace:\t%s\n\tError:%s\n",
 		getWhitespaceString(),
 		errorTrace,
 		indentMessageLines(failureMessage, 2),
 	)
 	if len(diff) > 0 {
-		msg = msg + fmt.Sprintf("\r\tDiff:%s\n\r",
-			indentMessageLines(diff, 2),
+		msg = msg + fmt.Sprintf("\tDiff:\n\r\t%s\n",
+			indentMessageLines(diff, 3),
 		)
 	}
 	if len(message) > 0 {
-		msg = msg + fmt.Sprintf("\r\tMessages:\t%s\n\r",
+		msg = msg + fmt.Sprintf("\tMessages:\t%s\n",
 			message,
 		)
 	}
@@ -66,15 +64,34 @@ func FailDiff(t TestingT, failureMessage, diff string, msgAndArgs ...interface{}
 	return false
 }
 
-// Fail reports a failure through, with a
+// Fail reports a failure through
 func Fail(t TestingT, failureMessage string, msgAndArgs ...interface{}) bool {
-	return assert.Fail(t, failureMessage, msgAndArgs...)
+	message := messageFromMsgAndArgs(msgAndArgs...)
+
+	errorTrace := strings.Join(assert.CallerInfo(), "\n\t\t\t")
+	if len(message) > 0 {
+		t.Errorf("%s\tError Trace:\t%s\n"+
+			"\tError:%s\n"+
+			"\tMessages:\t%s\n",
+			getWhitespaceString(),
+			errorTrace,
+			indentMessageLines(failureMessage, 2),
+			message)
+	} else {
+		t.Errorf("%s\tError Trace:\t%s\n"+
+			"\tError:%s\n",
+			getWhitespaceString(),
+			errorTrace,
+			indentMessageLines(failureMessage, 2))
+	}
+
+	return false
 }
 
-var capRE = regexp.MustCompile("cap=[0-9]+\\)")
-var capRepl = "cap=X"
-var addRE = regexp.MustCompile("\\(0x[0-9a-f]{6,10}\\)")
-var addRepl = "(0xXXXXXXXXXX)"
+// var capRE = regexp.MustCompile("cap=[0-9]+\\)")
+// var capRepl = "cap=X"
+// var addRE = regexp.MustCompile("\\(0x[0-9a-f]{6,10}\\)")
+// var addRepl = "(0xXXXXXXXXXX)"
 
 func diff(expected, actual string) string {
 	if !strings.HasSuffix(expected, "\n") {
@@ -106,10 +123,10 @@ func interfaceDiff(expected, actual interface{}) string {
 	expString := scs.Sdump(expected)
 	actString := scs.Sdump(actual)
 
-	expString = capRE.ReplaceAllString(expString, capRepl)
-	actString = capRE.ReplaceAllString(actString, capRepl)
-	expString = addRE.ReplaceAllString(expString, addRepl)
-	actString = addRE.ReplaceAllString(actString, addRepl)
+	// expString = capRE.ReplaceAllString(expString, capRepl)
+	// actString = capRE.ReplaceAllString(actString, capRepl)
+	// expString = addRE.ReplaceAllString(expString, addRepl)
+	// actString = addRE.ReplaceAllString(actString, addRepl)
 
 	return diff(expString, actString)
 }
